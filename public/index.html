@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 45%;
+            transition: background-color 0.3s;
+        }
+        .btn-add { background-color: #28a745; }
+        .btn-save { background-color: #007bff; }
+        .btn-delete { background-color: #dc3545; }
+        .login-btn, .otp-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .otp-btn:hover, .login-btn:hover {
+            background-color: #218838;
+        }
+        .form-container {
+            display: none;
+        }
+        .form-container.active {
+            display: block;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        .highlight {
+            background-color: #d4edda;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Voting System</h1>
+    <div class="tab-buttons">
+        <button onclick="showForm('userLogin')">User Login</button>
+        <button onclick="showForm('adminLogin')">Admin Login</button>
+    </div>
+    <div id="adminLogin" class="form-container">
+        <h2>Admin Login</h2>
+        <form onsubmit="adminLogin(event)">
+            <input type="text" id="adminUsername" placeholder="Username" required>
+            <input type="password" id="adminPassword" placeholder="Password" required>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
+    <div id="userLogin" class="form-container active">
+        <h2>User Login</h2>
+        <form>
+            <input type="text" id="userName" placeholder="Name" required>
+            <input type="text" id="userVoterID" placeholder="Voter ID" required>
+            <input type="text" id="userMobile" placeholder="Mobile Number" required>
+            <button type="button" class="otp-btn" onclick="generateOtp()">Generate OTP</button>
+        </form>
+    </div>
+    <div id="adminDashboard" class="form-container">
+        <h2>Candidate Management</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidate Name</th>
+                    <th>Party</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="candidateList"></tbody>
+        </table>
+        <div class="form-group">
+            <h3>Add New Candidate</h3>
+            <input type="text" id="candidateName" placeholder="Candidate Name" required>
+            <input type="text" id="candidateParty" placeholder="Party" required>
+            <button class="btn btn-add" onclick="addCandidate()">Add Candidate</button>
+        </div>
+        <button class="btn btn-save" onclick="saveCandidates()">Save Candidates</button>
+
+        <h2>Voter Management</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Voter Name</th>
+                    <th>Voter ID</th>
+                    <th>Mobile Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="voterList"></tbody>
+        </table>
+        <div class="form-group">
+            <h3>Add New Voter</h3>
+            <input type="text" id="voterName" placeholder="Voter Name" required>
+            <input type="text" id="voterID" placeholder="Voter ID" required>
+            <input type="text" id="voterMobile" placeholder="Mobile Number" required>
+            <button class="btn btn-add" onclick="addVoter()">Add Voter</button>
+        </div>
+        <button class="btn btn-save" onclick="saveVoters()">Save Voters</button>
+    </div>
+    <div id="voterDashboard" class="form-container">
+        <h2>Vote for Your Candidate</h2>
+        <form id="votingForm" onsubmit="castVote(event)">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Party</th>
+                        <th>Vote</th>
+                    </tr>
+                </thead>
+                <tbody id="votingCandidateList"></tbody>
+            </table>
+            <button type="submit" class="btn btn-vote">Cast Vote</button>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <h1>Real-Time Voting Results</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate Name</th>
+                <th>Party</th>
+                <th>Votes</th>
+                <th>Vote Percentage</th>
+            </tr>
+        </thead>
+        <tbody id="resultsTable"></tbody>
+    </table>
+</div>
+
+<script>
+    const adminCredentials = { username: "admin", password: "password123" };
+    let candidates = JSON.parse(localStorage.getItem('candidates')) || [];
+    let voters = JSON.parse(localStorage.getItem('voters')) || [];
+    let hasVoted = false;
+
+    function showForm(formId) {
+        document.querySelectorAll('.form-container').forEach(form => {
+            form.classList.remove('active');
+        });
+        document.getElementById(formId).classList.add('active');
+    }
+
+    function adminLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById("adminUsername").value;
+        const password = document.getElementById("adminPassword").value;
+
+        if (username === adminCredentials.username && password === adminCredentials.password) {
+            alert("Login successful!");
+            showForm('adminDashboard');
+        } else {
+            alert("Invalid username or password!");
+        }
+    }
+
+    function generateOtp() {
+        const voterID = document.getElementById("userVoterID").value;
+        const isRegisteredVoter = voters.some(voter => voter.id === voterID);
+        
+        if (isRegisteredVoter) {
+            alert('OTP has been generated and sent to your mobile number!');
+            showForm('voterDashboard'); 
+            loadCandidates();
+        } else {
+            alert("Voter ID not registered! Please contact the admin.");
+        }
+    }
+
+    window.onload = function() {
+        loadCandidates();
+        loadVoters();
+        updateResults();
+        setInterval(updateResults, 3000);
+    };
+
+    function loadCandidates() {
+        const candidateList = document.getElementById("candidateList");
+        const votingCandidateList = document.getElementById("votingCandidateList");
+        candidateList.innerHTML = "";
+        votingCandidateList.innerHTML = "";
+
+        candidates.forEach((candidate, index) => {
+            candidateList.innerHTML += `<tr>
+                <td>${candidate.name}</td>
+                <td>${candidate.party}</td>
+                <td>
+                    <button class="btn btn-delete" onclick="deleteCandidate(${index})">Delete</button>
+                </td>
+            </tr>`;
+
+            votingCandidateList.innerHTML += `<tr>
+                <td>${candidate.name}</td>
+                <td>${candidate.party}</td>
+                <td><input type="radio" name="vote" value="${candidate.name}"></td>
+            </tr>`;
+        });
+    }
+
+    function loadVoters() {
+        const voterList = document.getElementById("voterList");
+        voterList.innerHTML = "";
+        voters.forEach((voter, index) => {
+            voterList.innerHTML += `<tr>
+                <td>${voter.name}</td>
+                <td>${voter.id}</td>
+                <td>${voter.mobile}</td>
+                <td>
+                    <button class="btn btn-delete" onclick="deleteVoter(${index})">Delete</button>
+                </td>
+            </tr>`;
+        });
+    }
+    function addCandidate() {
+        const candidateName = document.getElementById("candidateName").value;
+        const candidateParty = document.getElementById("candidateParty").value;
+
+        candidates.push({ name: candidateName, party: candidateParty, votes: 0 });
+        localStorage.setItem('candidates', JSON.stringify(candidates));
+        loadCandidates();
+        document.getElementById("candidateName").value = '';
+        document.getElementById("candidateParty").value = '';
+    }
+    function deleteCandidate(index) {
+        candidates.splice(index, 1);
+        localStorage.setItem('candidates', JSON.stringify(candidates));
+        loadCandidates();
+    }
+    function saveCandidates() {
+        localStorage.setItem('candidates', JSON.stringify(candidates));
+        alert("Candidates saved!");
+    }
+    function addVoter() {
+        const voterName = document.getElementById("voterName").value;
+        const voterID = document.getElementById("voterID").value;
+        const voterMobile = document.getElementById("voterMobile").value;
+
+        voters.push({ name: voterName, id: voterID, mobile: voterMobile });
+        localStorage.setItem('voters', JSON.stringify(voters));
+        loadVoters();
+        document.getElementById("voterName").value = '';
+        document.getElementById("voterID").value = '';
+        document.getElementById("voterMobile").value = '';
+    }
+    function deleteVoter(index) {
+        voters.splice(index, 1);
+        localStorage.setItem('voters', JSON.stringify(voters));
+        loadVoters();
+    }
+
+    function saveVoters() {
+        localStorage.setItem('voters', JSON.stringify(voters));
+        alert("Voters saved!");
+    }
+
+    function castVote(event) {
+        event.preventDefault();
+        if (hasVoted) {
+            alert("You have already voted!");
+            return;
+        }
+
+        const selectedCandidate = document.querySelector('input[name="vote"]:checked');
+        if (!selectedCandidate) {
+            alert("Please select a candidate!");
+            return;
+        }
+        const candidateName = selectedCandidate.value;
+        const candidate = candidates.find(c => c.name === candidateName);
+        if (candidate) {
+            candidate.votes += 1;
+            localStorage.setItem('candidates', JSON.stringify(candidates));
+            hasVoted = true;
+            alert("Your vote has been cast!");
+            updateResults();
+        }
+    }
+    function updateResults() {
+        const resultsTable = document.getElementById("resultsTable");
+        resultsTable.innerHTML = "";
+        const totalVoters = voters.length;
+
+        candidates.forEach(candidate => {
+            const votes = candidate.votes;
+            const votePercentage = totalVoters > 0 ? ((votes / totalVoters) * 100).toFixed(2) : 0;
+            resultsTable.innerHTML += `<tr>
+                <td>${candidate.name}</td>
+                <td>${candidate.party}</td>
+                <td>${votes}</td>
+                <td>${votePercentage}%</td>
+            </tr>`;
+        });
+    }
+</script>
+</body>
+</html>
